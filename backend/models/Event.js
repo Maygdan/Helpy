@@ -6,9 +6,8 @@ const eventSchema = new mongoose.Schema({
   description: { type: String },
   
   date: { type: Date, required: true },
-  location: { type: String, required: true }, // Название переговорки/аудитории
+  location: { type: String, required: true },
   
-  // Бюджетирование (п.6)
   budgetRequested: { type: Number, default: 0 },
   budgetApproved: { type: Number, default: 0 },
   budgetStatus: { 
@@ -21,7 +20,10 @@ const eventSchema = new mongoose.Schema({
     type: String, 
     enum: ['planned', 'completed', 'cancelled'], 
     default: 'planned' 
-  }
+  },
+  
+  partnerEvent: { type: Boolean, default: false },
+  partnerName: { type: String, default: '' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Event', eventSchema);

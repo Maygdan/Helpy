@@ -1,47 +1,83 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Cell, List, Alert } from '@telegram-apps/telegram-ui';
+import api from '../api/client';
 
 export default function CommunityDetail() {
+  const { id } = useParams();
+  const [community, setCommunity] = useState(null);
   const navigate = useNavigate();
-  // В реальном приложении мы бы делали запрос к API по useParams().id
-  
+
+  useEffect(() => {
+    fetchCommunity();
+  }, [id]);
+
+  const fetchCommunity = async () => {
+    try {
+      const response = await api.get(`/communities/${id}`);
+      setCommunity(response.data);
+    } catch (error) {
+      console.error('Ошибка загрузки:', error);
+    }
+  };
+
+  const handleJoin = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      await api.post(`/communities/${id}/join`, { userId: user._id });
+      alert('Вы вступили в сообщество!');
+      fetchCommunity();
+    } catch (error) {
+      alert('Ошибка при вступлении');
+    }
+  };
+
   const handleInvite = () => {
-    // ИСПОЛЬЗУЕМ НАТИВНЫЙ ШЕРИНГ TELEGRAM (Требование №7: Виральность)
     const tg = window.Telegram?.WebApp;
     if (tg) {
-      tg.openTelegramLink('https://t.me/share/url?url=https://t.me/HelpyBot&text=Вступай в наше сообщество в Helpy!');
+      const shareText = "Привет! Вступай в наше сообщество через Helpy 🚀";
+      const shareUrl = "https://t.me/HelpyBot/helpy";
+      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
     } else {
       alert('Шеринг доступен только внутри Telegram');
     }
   };
 
+  if (!community) return <div className="tg-container">Загрузка...</div>;
+
   return (
-    <div style={{ padding: '16px' }}>
-      <h2>Клуб настольных игр </h2>
-      <p style={{ color: 'var(--tg-theme-hint-color)' }}>
-        Собираемся каждую пятницу в 19:00. Играем в Catan, D&D и Мафию.
-      </p>
-
-      <List style={{ marginTop: '24px' }}>
-        <Cell multiline>
-          <b>Участники:</b> 142 человека
-        </Cell>
-        <Cell multiline>
-          <b>Следующая встреча:</b> 28 сентября, Аудитория 305
-        </Cell>
-      </List>
-
-      <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {/* Кнопка виральности */}
-        <Button size="l" mode="filled" onClick={handleInvite}>
-           Пригласить друга (Дает +10 баллов кармы)
-        </Button>
-        
-        {/* Кнопка бронирования (Требование №6) */}
-        <Button size="l" mode="outlined" onClick={() => alert('Открывается календарь бронирования')}>
-          📅 Забронировать помещение
-        </Button>
+    <div className="tg-container">
+      <h2>{community.name}</h2>
+      <p style={{ color: 'var(--tg-theme-hint-color)' }}>{community.description}</p>
+      
+      <div style={{ marginTop: '12px' }}>
+        {community.tags.map((tag, idx) => (
+          <span key={idx} className="tg-tag">#{tag}</span>
+        ))}
       </div>
+
+      <div className="tg-card" style={{ marginTop: '24px' }}>
+        <div style={{ marginBottom: '12px' }}><b>Администратор:</b> {community.adminId?.fullName}</div>
+        <div style={{ marginBottom: '12px' }}><b>Участники:</b> {community.members?.length || 0}</div>
+        <div><b>Тип:</b> {community.accessType === 'public' ? 'Открытое' : 'Закрытое'}</div>
+      </div>
+
+      <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <button className="tg-button" onClick={handleJoin}>
+          Вступить в сообщество
+        </button>
+        
+        <button className="tg-button outline" onClick={handleInvite}>
+          📢 Пригласить друга
+        </button>
+        
+        <button className="tg-button outline" onClick={() => alert('Открывается календарь бронирования')}>
+          📅 Забронировать помещение
+        </button>
+      </div>
+
+      <button className="tg-button outline" style={{ marginTop: '24px' }} onClick={() => navigate('/catalog')}>
+        ← Назад в каталог
+      </button>
     </div>
   );
 }

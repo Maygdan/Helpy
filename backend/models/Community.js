@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const communitySchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   description: { type: String, required: true, maxlength: 500 },
-  tags: [{ type: String, trim: true }], // Для фильтрации и поиска (п.3)
+  tags: [{ type: String, trim: true }],
   
   accessType: { 
     type: String, 
@@ -15,22 +15,23 @@ const communitySchema = new mongoose.Schema({
   moderators: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   
-  // Жизненный цикл (п.5)
   status: { 
     type: String, 
     enum: ['active', 'archived', 'pending'], 
     default: 'active' 
   },
-  lastActiveAt: { type: Date, default: Date.now }, // Для автоматической архивации неактивных
+  lastActiveAt: { type: Date, default: Date.now },
   
-  // Статистика для дашборда организатора
+  budgetRequested: { type: Number, default: 0 },
+  budgetApproved: { type: Number, default: 0 },
+  roomBooked: { type: String, default: '' },
+  
   stats: {
     totalEvents: { type: Number, default: 0 },
     totalMembers: { type: Number, default: 0 }
   }
 }, { timestamps: true });
 
-// Индекс для быстрого поиска по тегам и названию
 communitySchema.index({ name: 'text', tags: 'text' });
 
 module.exports = mongoose.model('Community', communitySchema);

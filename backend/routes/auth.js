@@ -8,8 +8,7 @@ router.post('/register', async (req, res) => {
   try {
     const { telegramId, username, fullName, email, referralCode } = req.body;
 
-    // Простая проверка корпоративного домена для верификации (пример для кейса)
-    const isVerified = email.endsWith('@company.com') || email.endsWith('@uni.ru');
+    const isVerified = email.endsWith('@uni.ru') || email.endsWith('@company.com');
 
     let user = await User.findOne({ telegramId });
 
@@ -17,7 +16,6 @@ router.post('/register', async (req, res) => {
       return res.json({ message: 'Пользователь уже существует', user });
     }
 
-    // Генерация уникального реферального кода для нового пользователя
     const newReferralCode = crypto.randomBytes(4).toString('hex');
 
     user = new User({
@@ -27,10 +25,9 @@ router.post('/register', async (req, res) => {
       email,
       isVerified,
       referralCode: newReferralCode,
-      pdConsent: true // В реальном приложении это приходит с галочки в UI
+      pdConsent: true
     });
 
-    // Если был реферальный код, находим того, кто пригласил, и увеличиваем счётчик
     if (referralCode) {
       const referrer = await User.findOne({ referralCode });
       if (referrer) {
@@ -44,6 +41,17 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ message: 'Успешная регистрация', user });
   } catch (error) {
     res.status(500).json({ error: 'Ошибка сервера при регистрации' });
+  }
+});
+
+// Получить профиль пользователя
+router.get('/profile/:telegramId', async (req, res) => {
+  try {
+    const user = await User.findOne({ telegramId: req.params.telegramId })
+      .populate('communities');
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка при получении профиля' });
   }
 });
 

@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Input, Textarea, List, Cell, Alert } from '@telegram-apps/telegram-ui';
 import api from '../api/client';
 
 export default function CreateCommunity() {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    tags: '',
-    accessType: 'public'
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    description: '', 
+    tags: '', 
+    accessType: 'public',
+    budgetRequested: 0,
+    roomBooked: ''
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -23,121 +24,108 @@ export default function CreateCommunity() {
     setStep(step + 1);
   };
 
-  const handleBack = () => {
-    setError('');
-    setStep(step - 1);
-  };
-
   const handleSubmit = async () => {
     try {
-      // Получаем ID текущего пользователя из localStorage (заглушка)
       const user = JSON.parse(localStorage.getItem('user'));
-      
-      await api.post('/communities', {
-        ...formData,
-        adminId: user._id
-      });
-      
-      navigate('/catalog'); // Возврат в каталог после создания
+      await api.post('/communities', { ...formData, adminId: user._id });
+      navigate('/catalog');
     } catch (err) {
       setError('Ошибка при создании. Попробуйте позже.');
     }
   };
 
   return (
-    <div style={{ padding: '16px' }}>
-      {/* Индикатор шагов */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', color: 'var(--tg-theme-hint-color)' }}>
+    <div className="tg-container">
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
         <span style={{ color: step >= 1 ? 'var(--tg-theme-button-color)' : 'inherit', fontWeight: 'bold' }}>1. Основное</span>
         <span style={{ color: step >= 2 ? 'var(--tg-theme-button-color)' : 'inherit', fontWeight: 'bold' }}>2. Детали</span>
         <span style={{ color: step >= 3 ? 'var(--tg-theme-button-color)' : 'inherit', fontWeight: 'bold' }}>3. Финал</span>
       </div>
 
-      {error && <Alert type="error" style={{ marginBottom: '16px' }}>{error}</Alert>}
+      {error && <div className="tg-error">{error}</div>}
 
-      {/* ШАГ 1: Название и Описание */}
       {step === 1 && (
         <div>
           <h3>О чем ваше сообщество?</h3>
-          <Textarea 
-            top="Название" 
-            placeholder="Например: Клуб любителей настольных игр"
-            value={formData.name}
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
-          />
-          <div style={{ marginTop: '16px' }}>
-            <Textarea 
-              top="Краткое описание (для чего вступать?)" 
-              placeholder="Собираемся каждую пятницу..."
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              style={{ minHeight: '100px' }}
-            />
-          </div>
-          <Button size="l" stretched mode="filled" onClick={handleNext} style={{ marginTop: '24px' }}>
-            Далее
-          </Button>
+          <label style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '6px' }}>Название</label>
+          <input className="tg-input" placeholder="Например: Клуб настольных игр" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+          
+          <label style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '6px' }}>Описание</label>
+          <textarea className="tg-input" placeholder="Собираемся каждую пятницу..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} style={{ minHeight: '80px' }} />
+          
+          <button className="tg-button" style={{ marginTop: '16px' }} onClick={handleNext}>Далее</button>
         </div>
       )}
 
-      {/* ШАГ 2: Теги и Доступ */}
       {step === 2 && (
         <div>
-          <h3>Настройки видимости</h3>
-          <Input 
-            top="Теги (через запятую)" 
-            placeholder="хобби, игры, общение"
-            value={formData.tags}
-            onChange={(e) => setFormData({...formData, tags: e.target.value})}
-          />
+          <h3>Настройки и ресурсы</h3>
+          <label style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '6px' }}>Теги (через запятую)</label>
+          <input className="tg-input" placeholder="хобби, игры, общение" value={formData.tags} onChange={(e) => setFormData({...formData, tags: e.target.value})} />
           
-          <div style={{ marginTop: '24px' }}>
-            <div style={{ marginBottom: '8px', fontWeight: '500' }}>Тип доступа:</div>
-            <List>
-              <Cell 
-                before={<input type="radio" name="access" checked={formData.accessType === 'public'} onChange={() => setFormData({...formData, accessType: 'public'})} />}
-                description="Видно всем в каталоге, вступить может каждый"
-                onClick={() => setFormData({...formData, accessType: 'public'})}
-              >
-                Открытое
-              </Cell>
-              <Cell 
-                before={<input type="radio" name="access" checked={formData.accessType === 'private'} onChange={() => setFormData({...formData, accessType: 'private'})} />}
-                description="Видно всем, но вступление только по заявке"
-                onClick={() => setFormData({...formData, accessType: 'private'})}
-              >
-                Закрытое
-              </Cell>
-            </List>
+          <label style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '6px' }}>Тип доступа</label>
+          <div className="tg-card" style={{ padding: '12px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
+              <input type="radio" name="access" checked={formData.accessType === 'public'} onChange={() => setFormData({...formData, accessType: 'public'})} style={{ marginRight: '10px' }} />
+              <div>
+                <div style={{ fontWeight: '600' }}>Открытое</div>
+                <div className="tg-hint" style={{ margin: 0 }}>Видно всем, вступить может каждый</div>
+              </div>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <input type="radio" name="access" checked={formData.accessType === 'private'} onChange={() => setFormData({...formData, accessType: 'private'})} style={{ marginRight: '10px' }} />
+              <div>
+                <div style={{ fontWeight: '600' }}>Закрытое</div>
+                <div className="tg-hint" style={{ margin: 0 }}>Вступление только по заявке</div>
+              </div>
+            </label>
+          </div>
+
+          <div className="tg-card" style={{ marginTop: '20px' }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '15px' }}>🛠 Ресурсная поддержка</h4>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
+              <input type="checkbox" style={{ marginTop: '3px', accentColor: 'var(--tg-theme-button-color)' }} onChange={(e) => setFormData({...formData, budgetRequested: e.target.checked ? 15000 : 0})} />
+              <div>
+                <div style={{ fontWeight: '600', fontSize: '14px' }}>Запросить микро-бюджет</div>
+                <div className="tg-hint" style={{ margin: 0 }}>До 15 000 ₽ на первую встречу</div>
+              </div>
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+              <input type="checkbox" style={{ marginTop: '3px', accentColor: 'var(--tg-theme-button-color)' }} onChange={(e) => setFormData({...formData, roomBooked: e.target.checked ? 'Нужна переговорная' : ''})} />
+              <div>
+                <div style={{ fontWeight: '600', fontSize: '14px' }}>Забронировать помещение</div>
+                <div className="tg-hint" style={{ margin: 0 }}>Подберем свободную аудиторию</div>
+              </div>
+            </label>
           </div>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-            <Button size="l" mode="outlined" onClick={handleBack} style={{ flex: 1 }}>Назад</Button>
-            <Button size="l" mode="filled" onClick={handleNext} style={{ flex: 1 }}>Далее</Button>
+            <button className="tg-button outline" onClick={() => setStep(1)}>Назад</button>
+            <button className="tg-button" onClick={handleNext}>Далее</button>
           </div>
         </div>
       )}
 
-      {/* ШАГ 3: Подтверждение */}
       {step === 3 && (
         <div>
           <h3>Всё готово к запуску! 🚀</h3>
-          <div style={{ background: 'var(--tg-theme-secondary-bg-color)', padding: '16px', borderRadius: '12px', marginBottom: '24px' }}>
+          <div className="tg-card">
             <div style={{ fontWeight: 'bold', fontSize: '18px' }}>{formData.name}</div>
             <div style={{ marginTop: '8px', color: 'var(--tg-theme-hint-color)' }}>{formData.description}</div>
-            <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ marginTop: '12px' }}>
               {formData.tags.split(',').map((tag, i) => (
-                <span key={i} style={{ background: 'var(--tg-theme-button-color)', color: '#fff', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>#{tag.trim()}</span>
+                <span key={i} className="tg-tag">#{tag.trim()}</span>
               ))}
             </div>
-            <div style={{ marginTop: '12px', fontSize: '14px' }}>
-              Тип: <b>{formData.accessType === 'public' ? 'Открытое' : 'Закрытое'}</b>
-            </div>
+            <div style={{ marginTop: '12px', fontSize: '14px' }}>Тип: <b>{formData.accessType === 'public' ? 'Открытое' : 'Закрытое'}</b></div>
+            {formData.budgetRequested > 0 && <div style={{ marginTop: '8px', fontSize: '14px' }}>💰 Запрошен бюджет: {formData.budgetRequested} ₽</div>}
+            {formData.roomBooked && <div style={{ marginTop: '8px', fontSize: '14px' }}>📍 Запрошено помещение</div>}
           </div>
           
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <Button size="l" mode="outlined" onClick={handleBack} style={{ flex: 1 }}>Назад</Button>
-            <Button size="l" mode="filled" onClick={handleSubmit} style={{ flex: 1 }}>Создать</Button>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+            <button className="tg-button outline" onClick={() => setStep(2)}>Назад</button>
+            <button className="tg-button" onClick={handleSubmit}>Создать</button>
           </div>
         </div>
       )}

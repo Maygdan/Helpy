@@ -1,122 +1,46 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AppRoot } from '@telegram-apps/telegram-ui';
+
+import Auth from './pages/Auth';
+import Catalog from './pages/Catalog';
+import CreateCommunity from './pages/CreateCommunity';
+import CommunityDetail from './pages/CommunityDetail';
 
 function App() {
-  const [count, setCount] = useState(0)
+  // Простая проверка авторизации (для MVP)
+  const user = localStorage.getItem('user');
+
+  // Инициализация Telegram WebApp SDK (ВАЖНО для критерия UX/UI!)
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready(); // Сообщаем Telegram, что приложение загрузилось
+      tg.expand(); // Разворачиваем приложение на всю высоту экрана (убирает белые полосы)
+      
+      // Делаем хедер Telegram таким же, как фон нашего приложения, для бесшовного вида
+      tg.setHeaderColor(tg.themeParams.secondary_bg_color || '#f0f0f0');
+    }
+  }, []);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <AppRoot>
+      <Router>
+        <Routes>
+          {/* Если пользователь авторизован, редиректим в каталог, иначе показываем Auth */}
+          <Route path="/" element={user ? <Navigate to="/catalog" replace /> : <Auth />} />
+          
+          {/* Основные маршруты приложения */}
+          <Route path="/catalog" element={user ? <Catalog /> : <Navigate to="/" replace />} />
+          <Route path="/create" element={user ? <CreateCommunity /> : <Navigate to="/" replace />} />
+          <Route path="/community/:id" element={user ? <CommunityDetail /> : <Navigate to="/" replace />} />
+          
+          {/* Заглушка для несуществующих страниц (защита от ошибок) */}
+          <Route path="*" element={<Navigate to="/catalog" replace />} />
+        </Routes>
+      </Router>
+    </AppRoot>
+  );
 }
 
-export default App
+export default App;

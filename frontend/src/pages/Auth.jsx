@@ -24,9 +24,12 @@ export default function Auth() {
       });
       localStorage.setItem('user', JSON.stringify(response.data.user));
       navigate('/catalog');
-    } catch (err) {
-      setError('Ошибка регистрации. Попробуйте позже.');
-    }
+    }  catch (err) {
+  console.error('Ошибка регистрации:', err);
+  console.error('Response:', err.response?.data);
+  console.error('Status:', err.response?.status);
+  setError(`Ошибка: ${err.message}`);
+}
   };
 
   return (

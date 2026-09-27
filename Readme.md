@@ -121,6 +121,6 @@ npm run dev
 
 ## 👨‍💻 Разработчики
 
-- **[Твое Имя / Nickname]** — Fullstack Developer / Product Manager
+- **[Maygdan / Alexey]** — Fullstack Developer / Product Manager
 
 ---

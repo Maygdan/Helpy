@@ -121,6 +121,7 @@ npm run dev
 
 ## 👨‍💻 Разработчики
 
-- [Maygdan (Alexey)](https://github.com/Maygdan) — Fullstack Developer / Product Manager
+- [Maygdan (Alexey)](https://github.com/Maygdan) — Fullstack Developer / Designer 
+- [67 (Yaroslav)](https://t.me/cho_pa) - Product Manager / Analytic / My Besto friendo
 
 ---
